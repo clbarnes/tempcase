@@ -1,5 +1,7 @@
 # tempcase
 
+[![Build Status](https://travis-ci.org/clbarnes/tempcase.svg?branch=master)](https://travis-ci.org/clbarnes/tempcase)
+
 Utilities for handling python test cases with temporary directories and files, for people using `pyunit`/`unittest`.
 
 Supports python 2.7 and 3.4+.
