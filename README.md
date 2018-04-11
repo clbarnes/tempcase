@@ -96,7 +96,7 @@ import unittest
 import tempcase
 
 class MyOldTestCase(unittest.TestCase):
-    @tempcase.in_tempdir
+    @tempcase.in_tempdir('my_project')
     def test_old_code(self):
         """
         This method has now be ``os.chdir()``'d into a temporary directory which will be cleaned up.
@@ -104,5 +104,11 @@ class MyOldTestCase(unittest.TestCase):
         The directory's cleanup cannot be prevented.
         """
         open('my_local_file.txt', 'w').close()
+    
+    _project_name = 'my_project'  # can be defined in the class or passed to the decorator
+
+    @tempcase.in_tempdir
+    def test_slightly_newer_code(self):
+        pass
 
 ```
