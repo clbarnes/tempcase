@@ -44,11 +44,11 @@ release: dist ## package and upload a release
 	twine upload dist/*
 
 version-patch:
-	bumpversion --current-version $(current_version) patch
+	bumpversion patch
 
 version-minor:
-	bumpversion --current-version $(current_version) minor
+	bumpversion minor
 
 version-major:
-	bumpversion --current-version $(current_version) major
+	bumpversion major
 
