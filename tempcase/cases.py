@@ -1,10 +1,12 @@
 
 import os
+import errno
 import unittest
 from datetime import datetime
 import shutil
 from functools import wraps
 from warnings import warn
+import logging
 from tempfile import mkdtemp
 try:
     from tempfile import TemporaryDirectory
@@ -12,11 +14,15 @@ except ImportError:
     from backports.tempfile import TemporaryDirectory
 
 
+logger = logging.getLogger(__name__)
+
 __all__ = ['TempCase', 'in_tempdir']
 
+DEFAULT_PROJECT_NAME = 'python'
 
 TIMESTAMP = datetime.now().isoformat()
-DEFAULT_PROJECT_NAME = 'python'
+if os.name == "nt":
+    TIMESTAMP = TIMESTAMP.replace(":", ";")
 
 
 class TempCase(unittest.TestCase):
@@ -54,10 +60,11 @@ class TempCase(unittest.TestCase):
         """
         Create a path by joining the root tempdir, the TestCase dir, and the test method dir with the given elements.
 
-        The TestCase dir and test method dirs will be created if they do not already exist.
+        The TestCase dir and test method dir will be created if they do not already exist; but other elements in the path will not.
         """
         test_root = type(self).path_to_cls(self._testMethodName)
         if not os.path.isdir(test_root):
+            logger.debug("Creating temp dir for test method at %s", test_root)
             os.mkdir(test_root)
         return os.path.join(test_root, *args)
 
@@ -70,6 +77,7 @@ class TempCase(unittest.TestCase):
         """
         if not cls._output_root:
             cls._output_root = mkdtemp(prefix='{}_{}_{}_'.format(cls._project_name, cls.__name__, TIMESTAMP))
+            logger.debug("Created temp dir for test case at %s", cls._output_root)
         return os.path.join(cls._output_root, *args)
 
     def tearDown(self):
@@ -82,10 +90,11 @@ class TempCase(unittest.TestCase):
         try:
             if self._cleanup:
                 shutil.rmtree(path)
+                logger.debug("Deleted test method directory at %s", path)
             else:
                 warn('Directory {} was not deleted'.format(path))
         except OSError as e:
-            if '[Errno 2]' in str(e):
+            if e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -97,12 +106,13 @@ class TempCase(unittest.TestCase):
                 return
             if cls._cleanup:
                 os.rmdir(cls._output_root)
+                logger.debug("Deleted test case directory at %s", cls._output_root)
             else:
                 warn('Directory {} was not deleted'.format(cls._output_root))
         except OSError as e:
-            if '[Errno 39]' in str(e):
+            if e.errno == errno.ENOTEMPTY:
                 warn('Directory {} could not be deleted as it still had data in it'.format(cls._output_root))
-            elif '[Errno 2]' in str(e):
+            elif e.errno == errno.ENOENT:
                 pass
             else:
                 raise
@@ -150,3 +160,4 @@ def in_tempdir(project_name=DEFAULT_PROJECT_NAME):
                 return fn(*args, **kwargs)
         return wrapped
     return wrapper
+
