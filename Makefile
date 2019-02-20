@@ -1,3 +1,8 @@
+
+module = tempcase
+version_file = $(module)/version.py
+current_version := $(shell grep -Po "\d+\.\d+\.\d+" $(version_file))
+
 install:
 	pip install .
 
@@ -37,3 +42,13 @@ dist: clean ## builds source and wheel package
 
 release: dist ## package and upload a release
 	twine upload dist/*
+
+version-patch:
+	bumpversion --current-version $(current_version) patch
+
+version-minor:
+	bumpversion --current-version $(current_version) minor
+
+version-major:
+	bumpversion --current-version $(current_version) major
+
